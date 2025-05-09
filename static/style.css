@@ -1,0 +1,199 @@
+/* ===== GLOBAL STYLES ===== */
+body {
+  background: #0f1117;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 1rem;
+  color: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===== LAYOUT CONTAINER ===== */
+.app-container {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  justify-content: center;
+}
+
+/* ===== SIDEBAR (LEFT CONTROLS PANEL) ===== */
+.controls-panel {
+  background: #1e212b;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(255, 158, 0, 0.2);
+  width: 250px;
+  height: fit-content;
+}
+
+.controls-panel h2 {
+  color: #F9A825;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* ===== LOGO AREA ===== */
+.logo-area {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+/* ===== CHART AREA ===== */
+.chart-container {
+  flex-grow: 2;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.chart-area {
+  width: 100%;
+  max-width: 1000px;
+  height: 500px;
+  margin-top: 2rem;
+}
+
+/* ===== HEADINGS ===== */
+h1 {
+  margin-bottom: 1.5rem;
+  color: #F9A825;
+  text-align: center;
+}
+
+/* ===== FORM & CONTROLS ===== */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+select, button {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+}
+
+select {
+  background-color: #2c2f3c;
+  color: #fff;
+  width: 100%;
+}
+
+button {
+  background-color: #F9A825;
+  color: #000;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+button:hover {
+  background-color: #c17d00;
+  transform: translateY(-2px);
+}
+
+/* ===== BUTTON GROUP ===== */
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ===== LOADER ===== */
+.loader-container {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  color: #F9A825;
+  height: 500px;
+  justify-content: center;
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #F9A825;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== SUMMARY TEXT ===== */
+.summary-text {
+  margin: 1rem 0;
+  color: #ccc;
+  text-align: center;
+}
+
+/* ===== DETAILS PANEL (Right Info Panel) ===== */
+.details-panel {
+  background: #1e212b;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 0 25px rgba(255, 158, 0, 0.2);
+  width: 250px;
+  height: fit-content;
+  color: #F9A825;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+/* ===== RANGE LABEL (Actual History Slider Label) ===== */
+.range-label {
+  color: #F9A825;
+  margin-top: 0.5rem;
+  display: block;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ===== RESPONSIVE STYLES ===== */
+@media (max-width: 900px) {
+  .app-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .controls-panel,
+  .details-panel {
+    width: 100%;
+    margin-top: 1rem;
+    text-align: center;
+    align-items: center;
+  }
+
+  .button-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .button-group button {
+    width: auto;
+    flex-grow: 1;
+  }
+}

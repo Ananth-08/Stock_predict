@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stock Forecast</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    /* Reset default styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif; /* Default font */
+    }
+
+    /* Body with background image */
+    body {
+      background: url('/static/background.png') no-repeat center center fixed;
+      background-size: cover;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Overlay to ensure content is not affected */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7); /* Original overlay */
+      z-index: -1;
+    }
+
+    /* Header with logo and website name */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(90deg, #0A0C12, #14161E);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .header .logo {
+      width: 50px;
+      height: 50px;
+      margin-right: 15px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Main app container */
+    .app-container {
+      display: flex;
+      flex: 1;
+      padding: 20px;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      flex-wrap: wrap;
+    }
+
+    /* Panels */
+    .controls-panel, .chart-container, .details-panel {
+      background: rgba(10, 12, 18, 0.98);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .controls-panel:hover, .chart-container:hover, .details-panel:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Controls panel */
+    .controls-panel {
+      flex: 1;
+      min-width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin-left: -10px;
+    }
+
+    .logo-area {
+      text-align: center;
+    }
+
+    .logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid #808388;
+      padding: 5px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .form-group label {
+      font-size: 16px;
+      color: #808388;
+    }
+
+    .form-group select, .form-group input[type="range"] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #1A1C24;
+      background: #0A0C12;
+      color: #ffffff;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group select:focus, .form-group input[type="range"]:focus {
+      border-color: #808388;
+      outline: none;
+    }
+
+    .range-label {
+      font-size: 14px;
+      color: #808388;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .button-group button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .button-group button:first-child {
+      background: #1A1C24;
+      color: #ffffff;
+    }
+
+    .button-group button:first-child:hover {
+      background: #0F1119;
+      transform: scale(1.05);
+    }
+
+    .reset-button {
+      background: #1A1C24;
+      color: #ffffff;
+    }
+
+    .reset-button:hover {
+      background: #0F1119;
+      transform: scale(1.05);
+    }
+
+    /* Chart container */
+    .chart-container {
+      flex: 3;
+      min-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      padding: 25px;
+    }
+
+    .chart-container h1 {
+      text-align: center;
+      font-size: 24px;
+      color: #808388;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    .chart-area {
+      height: 450px;
+    }
+
+    .summary-text {
+      font-size: 14px;
+      color: #808388;
+      text-align: center;
+    }
+
+    .loader-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: #808388;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #808388;
+      border-top: 4px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Details panel */
+    .details-panel {
+      flex: 1;
+      min-width: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-right: -10px;
+    }
+
+    .details-panel h2 {
+      font-size: 20px;
+      color: #808388;
+      text-align: center;
+    }
+
+    .details-panel p {
+      font-size: 16px;
+      color: #ffffff;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-container {
+        flex-direction: column;
+        padding: 10px;
+      }
+
+      .controls-panel, .chart-container, .details-panel {
+        min-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 20px;
+      }
+
+      .chart-area {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with logo and website name -->
+  <div class="header">
+    <img src="/static/logo.png" alt="Logo" class="logo">
+    <h1>Stock Forecast</h1>
+  </div>
+
+  <div class="app-container">
+    <!-- Left: Control Panel -->
+    <div class="controls-panel">
+      <div class="logo-area">
+        <img src="/static/logo.png" alt="Logo" class="logo">
+      </div>
+
+      <div class="form-group">
+        <label for="stockSelect">Select Stock:</label>
+        <select id="stockSelect">
+          {% for stock in stocks %}
+            <option value="{{ stock }}">{{ stock }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="historySlider">History Display (months):</label>
+        <input type="range" id="historySlider" min="1" max="12" value="6">
+        <span id="historySliderValue" class="range-label">6 months</span>
+      </div>
+
+      <div class="form-group">
+        <label for="forecastSlider">Forecast Range (months):</label>
+        <input type="range" id="forecastSlider" min="1" max="6" value="2">
+        <span id="forecastSliderValue" class="range-label">2 months</span>
+      </div>
+
+      <div class="button-group">
+        <button onclick="fetchForecast()">Generate Forecast</button>
+        <button onclick="resetForm()" class="reset-button">Reset</button>
+      </div>
+    </div>
+
+    <!-- Center: Chart -->
+    <div class="chart-container">
+      <h1>Stock Price Forecast</h1>
+      <div id="chart" class="chart-area"></div>
+      <div id="summary" class="summary-text"></div>
+      <div id="loading" class="loader-container">
+        <div class="spinner"></div>
+        <p>Generating Forecast...</p>
+      </div>
+    </div>
+
+    <!-- Right: Company Details -->
+    <div class="details-panel">
+      <h2>Company Info</h2>
+      <p id="companyName">Company: --</p>
+      <p id="sector">Sector: --</p>
+      <p id="currentPrice">Price: $--</p>
+    </div>
+  </div>
+
+  <script>
+    // Update slider values dynamically
+    function updateSliderLabel(sliderId, labelId) {
+      const slider = document.getElementById(sliderId);
+      const label = document.getElementById(labelId);
+      slider.addEventListener('input', function() {
+        const months = this.value;
+        label.textContent = `${months} ${months == 1 ? 'month' : 'months'}`;
+      });
+    }
+
+    updateSliderLabel('historySlider', 'historySliderValue');
+    updateSliderLabel('forecastSlider', 'forecastSliderValue');
+
+    // Simple linear regression to check for linearity
+    function isForecastLinear(forecastPrices) {
+      const x = Array.from({ length: forecastPrices.length }, (_, i) => i);
+      const n = x.length;
+      const meanX = x.reduce((a, b) => a + b, 0) / n;
+      const meanY = forecastPrices.reduce((a, b) => a + b, 0) / n;
+
+      let ssXX = 0, ssXY = 0;
+      for (let i = 0; i < n; i++) {
+        const dx = x[i] - meanX;
+        const dy = forecastPrices[i] - meanY;
+        ssXX += dx * dx;
+        ssXY += dx * dy;
+      }
+
+      const slope = ssXY / ssXX;
+      const intercept = meanY - slope * meanX;
+
+      // Calculate R²
+      let ssTot = 0, ssRes = 0;
+      for (let i = 0; i < n; i++) {
+        const yPred = slope * x[i] + intercept;
+        ssTot += (forecastPrices[i] - meanY) ** 2;
+        ssRes += (forecastPrices[i] - yPred) ** 2;
+      }
+      const rSquared = 1 - ssRes / ssTot;
+
+      return rSquared > 0.95; // High R² indicates linear forecast
+    }
+
+    async function fetchForecast() {
+      const stock = document.getElementById("stockSelect").value;
+      const historyMonths = parseInt(document.getElementById("historySlider").value);
+      const forecastMonths = parseInt(document.getElementById("forecastSlider").value);
+
+      // Basic validation
+      if (!stock) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Stock Selected',
+          text: 'Please select a stock to generate a forecast.'
+        });
+        return;
+      }
+
+      document.getElementById("loading").style.display = "flex";
+      document.getElementById("chart").style.display = "none";
+      document.getElementById("summary").innerHTML = "";
+
+      try {
+        const response = await fetch("/forecast", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stock,
+            history_months: historyMonths,
+            forecast_months: forecastMonths
+          })
+        });
+
+        const data = await response.json();
+        if (data.error) throw new Error(data.error);
+
+        // Check for flat or overly linear forecast
+        const forecastPrices = data.forecast.map(p => p.price);
+        const forecastRange = Math.max(...forecastPrices) - Math.min(...forecastPrices);
+        const avgPrice = forecastPrices.reduce((a, b) => a + b, 0) / forecastPrices.length;
+        if (forecastRange < 0.01 * avgPrice || isForecastLinear(forecastPrices)) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Simplified Forecast Detected',
+            text: `The forecast is too flat or linear (range: $${forecastRange.toFixed(2)}). Try selecting a different stock for more dynamic predictions.`,
+            confirmButtonColor: '#808388'
+          });
+        }
+
+        renderChart(data, stock);
+
+        // Update details panel
+        document.getElementById("companyName").textContent = `Company: ${data.details.stock}`;
+        document.getElementById("sector").textContent = `Sector: ${data.details.sector}`;
+        document.getElementById("currentPrice").textContent = `Price: $${data.details.latest_price.toFixed(2)}`;
+
+      } catch (err) {
+        console.error("Forecast error:", err.message);
+        Swal.fire({
+          icon: 'error',
+          title: 'Forecast Error',
+          text: err.message,
+          confirmButtonColor: '#808388'
+        });
+      } finally {
+        document.getElementById("loading").style.display = "none";
+      }
+    }
+
+    function renderChart(data, stock) {
+      const historicalTrace = {
+        x: data.historical.map(p => p.date),
+        y: data.historical.map(p => p.price),
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Historical',
+        line: { color: '#4A8A8A', width: 2 },
+        marker: { size: 4 }
+      };
+
+      const forecastTrace = {
+        x: data.forecast.map(p => p.date),
+        y: data.forecast.map(p => p.price),
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: 'Forecast',
+        line: { color: '#8A4A8A', width: 2, dash: 'dash' },
+        marker: { size: 4 }
+      };
+
+      const forecastUpperTrace = {
+        x: data.forecast.map(p => p.date),
+        y: data.forecast.map(p => p.upper),
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Upper CI',
+        line: { color: '#8A4A8A', width: 0 },
+        showlegend: false
+      };
+
+      const forecastLowerTrace = {
+        x: data.forecast.map(p => p.date),
+        y: data.forecast.map(p => p.lower),
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Confidence Interval',
+        fill: 'tonexty',
+        fillcolor: 'rgba(138, 74, 138, 0.2)',
+        line: { color: '#8A4A8A', width: 0 },
+        showlegend: true
+      };
+
+      const layout = {
+        title: {
+          text: `${stock} Price Forecast`,
+          font: { size: 20, color: '#808388' },
+          x: 0.5,
+          xanchor: 'center'
+        },
+        xaxis: {
+          type: 'date',
+          tickformat: '%b %d, %Y',
+          tickangle: -30,
+          title: 'Date',
+          titlefont: { color: '#ffffff' },
+          tickfont: { color: '#ffffff' }
+        },
+        yaxis: {
+          title: 'Price ($)',
+          titlefont: { color: '#ffffff' },
+          tickfont: { color: '#ffffff' }
+        },
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#ffffff' },
+        margin: { t: 60, l: 80, r: 40, b: 100 },
+        hovermode: 'x unified',
+        showlegend: true,
+        legend: {
+          x: 1,
+          y: 1,
+          xanchor: 'right',
+          yanchor: 'top',
+          bgcolor: 'rgba(40, 42, 48, 0.98)', /* Lighter background */
+          bordercolor: '#6AB0B0', /* Lighter border */
+          borderwidth: 1
+        }
+      };
+
+      document.getElementById("chart").style.display = "block";
+      Plotly.newPlot('chart', [historicalTrace, forecastLowerTrace, forecastUpperTrace, forecastTrace], layout);
+
+      document.getElementById("summary").innerHTML = `
+        <p>Showing ${data.details.history_months} months of historical data and ${data.details.forecast_months} months of forecast. Model trained on ${data.details.training_data_points} data points.</p>
+      `;
+    }
+
+    function resetForm() {
+      document.getElementById("stockSelect").value = "";
+      document.getElementById("historySlider").value = 6;
+      document.getElementById("forecastSlider").value = 2;
+      document.getElementById("historySliderValue").textContent = "6 months";
+      document.getElementById("forecastSliderValue").textContent = "2 months";
+      document.getElementById("chart").style.display = "none";
+      document.getElementById("summary").innerHTML = "";
+      document.getElementById("companyName").textContent = "Company: --";
+      document.getElementById("sector").textContent = "Sector: --";
+      document.getElementById("currentPrice").textContent = "Price: $--";
+    }
+  </script>
+</body>
+</html>
