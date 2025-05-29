@@ -14,7 +14,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CSV_PATH = "stock_data.csv"
+CSV_PATH = "C:/Users/selva/Downloads/Stock_predict-main/Stock_predict-main/stock_data.csv"
+
 
 # Load and clean data
 try:
